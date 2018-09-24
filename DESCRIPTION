@@ -1,0 +1,13 @@
+Package: ynabr
+Type: Package
+Title: What the Package Does (Title Case)
+Version: 0.0.1
+Author: Jonathan T. Oxborrow
+Maintainer: Jonathan T. Oxborrow <jonathan.todd.oxborrow@gmail.com>
+Description: This package allow for interaction the YNAB web api. It provides
+    functions for easy interaction and downloading and inserting of data.
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+Imports: httr
+RoxygenNote: 6.1.0

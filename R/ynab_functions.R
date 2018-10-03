@@ -42,3 +42,6 @@ set_ynab_options <- function(token){
   # Set the base url
   options(base_url = "https://api.youneedabudget.com/v1/")
 }
+
+xc <- httr::GET(url = paste(getOption("base_url"), "budgets", sep = ""),
+                httr::add_headers(Authorization = paste("Bearer", getOption("ynab_token"))))

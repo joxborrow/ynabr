@@ -43,5 +43,43 @@ set_ynab_options <- function(token){
   options(base_url = "https://api.youneedabudget.com/v1/")
 }
 
-xc <- httr::GET(url = paste(getOption("base_url"), "budgets", sep = ""),
-                httr::add_headers(Authorization = paste("Bearer", getOption("ynab_token"))))
+#' Execute a YNAB GET request
+#'
+#' @param entry_point
+#'
+#' @return
+#' @export
+#'
+#' @examples
+execute_get_req <- function(entry_point){
+  ret_val <- httr::GET(url = paste(getOption("base_url"), entry_point, sep = ""),
+                  httr::add_headers(Authorization = paste("Bearer", getOption("ynab_token"))))
+  return(ret_val)
+}
+
+#' List the available budgets
+#'
+#' @return
+#' @export
+#'
+#' @examples
+list_budgets <- function(){
+  budget_list <- httr::content(execute_get_req("budgets"))
+  budget_list <- budget_list[["data"]][["budgets"]]
+
+  final_list <- data.frame(name = NULL,
+                           id = NULL,
+                           last_modified_on = NULL,
+                           first_month = NULL,
+                           last_month = NULL)
+  for (i in 1:length(budget_list)){
+    temp <- data.frame(name = budget_list[[i]][["name"]],
+                       id = budget_list[[i]][["id"]],
+                       last_modified_on = budget_list[[i]][["last_modified_on"]],
+                       first_month = budget_list[[i]][["first_month"]],
+                       last_month = budget_list[[i]][["last_month"]])
+    final_list <- rbind(final_list, temp)
+  }
+
+  return(final_list)
+}

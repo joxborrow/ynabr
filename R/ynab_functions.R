@@ -51,8 +51,8 @@ set_ynab_options <- function(token){
 #' @export
 #'
 #' @examples
-execute_get_req <- function(entry_point){
-  ret_val <- httr::GET(url = paste(getOption("base_url"), entry_point, sep = ""),
+execute_get_req <- function(endpoint){
+  ret_val <- httr::GET(url = paste(getOption("base_url"), endpoint, sep = ""),
                   httr::add_headers(Authorization = paste("Bearer", getOption("ynab_token"))))
   return(ret_val)
 }
@@ -82,4 +82,23 @@ list_budgets <- function(){
   }
 
   return(final_list)
+}
+
+#' Get budget data
+#'
+#' @param budget
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_budget <- function(budget){
+  budget_data <- list_budgets()
+
+
+  # Validate budget name or id
+  if (!(budget %in% budget_data$id | budget %in% budget_data$name))
+    stop("You must enter a valid budget name or id.")
+
+  # Fetch budget
 }

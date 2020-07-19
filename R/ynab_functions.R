@@ -101,4 +101,9 @@ get_budget <- function(budget){
     stop("You must enter a valid budget name or id.")
 
   # Fetch budget
+  if(budget %in% budget_data$id)
+    x <- httr::content(execute_get_req(paste0("budgets/", budget)))
+
+  # Return the data
+  return(x)
 }

@@ -6,6 +6,9 @@
 \usage{
 list_budgets()
 }
+\value{
+
+}
 \description{
 List the available budgets
 }

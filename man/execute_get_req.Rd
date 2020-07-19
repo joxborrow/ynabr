@@ -4,10 +4,13 @@
 \alias{execute_get_req}
 \title{Execute a YNAB GET request}
 \usage{
-execute_get_req(entry_point)
+execute_get_req(endpoint)
 }
 \arguments{
 \item{entry_point}{}
+}
+\value{
+
 }
 \description{
 Execute a YNAB GET request

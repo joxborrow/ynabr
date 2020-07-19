@@ -19,15 +19,18 @@
 #' This function sets a global option ynab_token for use in
 #' many other function calls.  It should be the first function
 #' called as other functions will not work without a proper
-#' token. It also sets the base_url option.
+#' token. It also sets the base_url option, including the YNAB api version.
+#'
+#' The token is obtained through a registration process on the YNAB website. The
+#' token is a 64 character long alphanumeric string.
 #'
 #' @param token
 #'
 #' @return No return value
 #' @export
 #' @examples
-#' set_ynab_token("test************************************************************")
-set_ynab_options <- function(token){
+#' ## set_ynab_token("test**************************************************")
+set_ynab_options <- function(token, api_version = "v1"){
   # Check the class of the token argument
   if(class(token) != "character")
     stop("The token argument must have a class of character.")
@@ -40,7 +43,7 @@ set_ynab_options <- function(token){
   options(ynab_token = token)
 
   # Set the base url
-  options(base_url = "https://api.youneedabudget.com/v1/")
+  options(base_url = paste0("https://api.youneedabudget.com/", api_version, "/"))
 }
 
 #' Execute a YNAB GET request

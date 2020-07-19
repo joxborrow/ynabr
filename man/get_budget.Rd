@@ -9,6 +9,9 @@ get_budget(budget)
 \arguments{
 \item{budget}{}
 }
+\value{
+
+}
 \description{
 Get budget data
 }

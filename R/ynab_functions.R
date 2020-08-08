@@ -12,7 +12,7 @@
 #   Build and Reload Package:  'Ctrl + Shift + B'
 #   Check Package:             'Ctrl + Shift + E'
 #   Test Package:              'Ctrl + Shift + T'
-# 6062d48a5310689d35cfe589ed73ffe2e8b51da79026f847e0ecce9fe5097eed
+#
 
 #' Set your YNAB API options
 #'

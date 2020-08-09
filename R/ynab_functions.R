@@ -57,6 +57,10 @@ ynab_set_token <- function(token, api_version = "v1"){
 #'
 #' @examples
 execute_get_req <- function(endpoint){
+
+# TODO: Read from an environment variable if available --------------------
+
+
   ret_val <- httr::GET(url = paste(getOption("base_url"), endpoint, sep = ""),
                   httr::add_headers(Authorization = paste("Bearer", getOption("ynab_token"))))
   return(ret_val)
@@ -107,19 +111,53 @@ ynab_get_budget <- function(budget){
 
   # Fetch budget if ID is provided
   if(budget %in% budget_list$id)
-    budget_data <- httr::content(execute_get_req(paste0("budgets/", budget)))
+    bd <- httr::content(execute_get_req(paste0("budgets/", budget)))
 
   # Fetch budget if Budget name is provided
   if(budget %in% budget_list$name){
     budget <- budget_list$id[budget_list$name == budget]
-    budget_data <- httr::content(execute_get_req(paste0("budgets/", budget)))
+    bd <- httr::content(execute_get_req(paste0("budgets/", budget)))
   }
 
   # Add S3 class
-  class(budget_data) <- c("budget_data", "list")
+  class(bd) <- c("budget_data", "list")
+
+  # Change text dates/times to R date and time classes on budget data
+  bd[["data"]][["budget"]][["last_modified_on"]] <-
+    as.POSIXct(bd[["data"]][["budget"]][["last_modified_on"]],
+               format = "%Y-%m-%dT%H:%M:%S+00:00")
+  bd[["data"]][["budget"]][["first_month"]] <-
+    as.Date(bd[["data"]][["budget"]][["first_month"]])
+  bd[["data"]][["budget"]][["last_month"]] <-
+    as.Date(bd[["data"]][["budget"]][["last_month"]])
+
+  # Change text dates/times to R dates on times on months
+  bd[["data"]][["budget"]][["months"]] <-
+    purrr::map(bd[["data"]][["budget"]][["months"]], ~{
+      .x[["month"]] <- as.Date(.x[["month"]])
+      return(.x)
+    })
+
+  # Change text dates/times to R dates and times on transaction data
+  bd[["data"]][["budget"]][["transactions"]] <-
+    purrr::map(bd[["data"]][["budget"]][["transactions"]], ~{
+      .x[["date"]] <- as.Date(.x[["date"]])
+      return(.x)
+    })
+  bd[["data"]][["budget"]][["scheduled_transactions"]] <-
+    purrr::map(bd[["data"]][["budget"]][["scheduled_transactions"]], ~{
+      .x[["date_first"]] <- as.Date(.x[["date_first"]])
+      .x[["date_next"]] <- as.Date(.x[["date_next"]])
+      return(.x)
+    })
+
+
+# TODO: Convert milliunits to actual units --------------------------------
+
+
 
   # Return the data
-  return(budget_data)
+  return(bd)
 }
 
 #' Print Budget data
@@ -131,16 +169,49 @@ ynab_get_budget <- function(budget){
 #'
 #' @examples
 print.budget_data <- function(bd){
-  cat(paste0("Budget Name: ", bd[["data"]][["budget"]][["name"]]))
-  cat(paste0("\nBudget ID: ", bd[["data"]][["budget"]][["id"]]))
+  # Print budget information
+  cat("Budget Information\n=============================================")
+  cat(paste0("\nName: ", bd[["data"]][["budget"]][["name"]]))
+  cat(paste0("\nID: ", bd[["data"]][["budget"]][["id"]]))
   cat(paste0("\nLast Modified: ", bd[["data"]][["budget"]][["last_modified_on"]]))
-  cat(paste0("\nBudget Timeframe: ", format(bd[["data"]][["budget"]][["first_month"]]), "-",
+  cat(paste0("\nTimeframe: ", format(bd[["data"]][["budget"]][["first_month"]]), " to ",
              bd[["data"]][["budget"]][["last_month"]]))
-  cat(paste0("\n\n# of Accounts: ", length(bd[["data"]][["budget"]][["accounts"]])))
+  cat(paste0("\nCurrency: ", bd[["data"]][["budget"]][["currency_format"]][["iso_code"]]))
+
+  # Print account information
+  cat("\n\nAccount Information\n=============================================")
+  cat(paste0("\n# of Accounts: ", length(bd[["data"]][["budget"]][["accounts"]])))
+  active_accounts <- purrr::keep(bd[["data"]][["budget"]][["accounts"]], function(.x) {return (!.x[["closed"]])})
+  cat(paste0("\n# of Active Accounts: ", length(active_accounts)))
+  on_budget_accounts <- purrr::keep(bd[["data"]][["budget"]][["accounts"]], function(.x) {return (.x[["on_budget"]] & !.x[["closed"]])})
+  cat(paste0("\n# of Active On Budget Accounts: ", length(on_budget_accounts)))
+
+  # Print Payee information
+  cat("\n\nPayee Summary\n=============================================")
   cat(paste0("\n# of Payees: ", length(bd[["data"]][["budget"]][["payees"]])))
+  active_payees <- purrr::keep(bd[["data"]][["budget"]][["payees"]], function(.x) {return (!.x[["deleted"]])})
+  cat(paste0("\n# of Active Payees: ", length(active_payees)))
+
+  # Print Category information
+  cat("\n\nCategory Summary\n=============================================")
   cat(paste0("\n# of Category Groups: ", length(bd[["data"]][["budget"]][["category_groups"]])))
   cat(paste0("\n# of Categories: ", length(bd[["data"]][["budget"]][["categories"]])))
+
+  # Print Transaction information
+  cat("\n\nTransaction Summary\n=============================================")
   cat(paste0("\n# of Transactions: ", length(bd[["data"]][["budget"]][["transactions"]])))
   cat(paste0("\n# of Scheduled Transactions: ", length(bd[["data"]][["budget"]][["scheduled_transactions"]])))
 
+}
+
+#' Budget Data Summary
+#'
+#' @param bd
+#'
+#' @return
+#' @export
+#'
+#' @examples
+summary.budget_data <- function(bd){
+  print(bd)
 }

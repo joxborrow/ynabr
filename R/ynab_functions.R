@@ -116,10 +116,10 @@ ynab_get_budget <- function(budget){
   }
 
   # Add S3 class
-  class(x) <- c("budget_data", "list")
+  class(budget_data) <- c("budget_data", "list")
 
   # Return the data
-  return(x)
+  return(budget_data)
 }
 
 #' Print Budget data
@@ -130,6 +130,17 @@ ynab_get_budget <- function(budget){
 #' @export
 #'
 #' @examples
-print.budget_data <- function(x){
-  cat("print budget data summary")
+print.budget_data <- function(bd){
+  cat(paste0("Budget Name: ", bd[["data"]][["budget"]][["name"]]))
+  cat(paste0("\nBudget ID: ", bd[["data"]][["budget"]][["id"]]))
+  cat(paste0("\nLast Modified: ", bd[["data"]][["budget"]][["last_modified_on"]]))
+  cat(paste0("\nBudget Timeframe: ", format(bd[["data"]][["budget"]][["first_month"]]), "-",
+             bd[["data"]][["budget"]][["last_month"]]))
+  cat(paste0("\n\n# of Accounts: ", length(bd[["data"]][["budget"]][["accounts"]])))
+  cat(paste0("\n# of Payees: ", length(bd[["data"]][["budget"]][["payees"]])))
+  cat(paste0("\n# of Category Groups: ", length(bd[["data"]][["budget"]][["category_groups"]])))
+  cat(paste0("\n# of Categories: ", length(bd[["data"]][["budget"]][["categories"]])))
+  cat(paste0("\n# of Transactions: ", length(bd[["data"]][["budget"]][["transactions"]])))
+  cat(paste0("\n# of Scheduled Transactions: ", length(bd[["data"]][["budget"]][["scheduled_transactions"]])))
+
 }

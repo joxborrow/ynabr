@@ -30,7 +30,9 @@
 #' @export
 #' @examples
 #' ## set_ynab_token("test**************************************************")
-set_ynab_options <- function(token, api_version = "v1"){
+ynab_set_token <- function(token, api_version = "v1"){
+  # Add getting the token from an enviroment variable -----
+
   # Check the class of the token argument
   if(class(token) != "character")
     stop("The token argument must have a class of character.")
@@ -66,7 +68,7 @@ execute_get_req <- function(endpoint){
 #' @export
 #'
 #' @examples
-list_budgets <- function(){
+ynab_list_budgets <- function(){
   budget_list <- httr::content(execute_get_req("budgets"))
   budget_list <- budget_list[["data"]][["budgets"]]
 
@@ -95,18 +97,39 @@ list_budgets <- function(){
 #' @export
 #'
 #' @examples
-get_budget <- function(budget){
-  budget_data <- list_budgets()
+ynab_get_budget <- function(budget){
+  budget_list <- ynab_list_budgets()
 
 
   # Validate budget name or id
-  if (!(budget %in% budget_data$id | budget %in% budget_data$name))
+  if (!(budget %in% budget_list$id | budget %in% budget_list$name))
     stop("You must enter a valid budget name or id.")
 
-  # Fetch budget
-  if(budget %in% budget_data$id)
-    x <- httr::content(execute_get_req(paste0("budgets/", budget)))
+  # Fetch budget if ID is provided
+  if(budget %in% budget_list$id)
+    budget_data <- httr::content(execute_get_req(paste0("budgets/", budget)))
+
+  # Fetch budget if Budget name is provided
+  if(budget %in% budget_list$name){
+    budget <- budget_list$id[budget_list$name == budget]
+    budget_data <- httr::content(execute_get_req(paste0("budgets/", budget)))
+  }
+
+  # Add S3 class
+  class(x) <- c("budget_data", "list")
 
   # Return the data
   return(x)
+}
+
+#' Print Budget data
+#'
+#' @param x
+#'
+#' @return
+#' @export
+#'
+#' @examples
+print.budget_data <- function(x){
+  cat("print budget data summary")
 }

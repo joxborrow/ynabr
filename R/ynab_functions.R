@@ -215,3 +215,34 @@ print.budget_data <- function(bd){
 summary.budget_data <- function(bd){
   print(bd)
 }
+
+
+ynab_get_account_data <- function(bd){
+suppressWarnings(
+  ad <- purrr::map_df(x[["data"]][["budget"]][["transactions"]], ~{
+    df <- data.frame(
+      id = .x[["id"]],
+      date = .x[["date"]],
+      amount = .x[["amount"]],
+      memo = ifelse(is.null(.x[["memo"]]), "", .x[["memo"]]),
+      cleared = .x[["cleared"]],
+      approved = .x[["approved"]],
+      flag_color = ifelse(is.null(.x[["flag_color"]]), "", .x[["flag_color"]]),
+      account_id = .x[["account_id"]],
+      payee_id = .x[["payee_id"]],
+      category_id = ifelse(is.null(.x[["category_id"]]), "", .x[["category_id"]]),
+      transfer_account_id = ifelse(is.null(.x[["transfer_account_id"]]), "",
+                                   .x[["transfer_account_id"]]),
+      transfer_transaction_id = ifelse(is.null(.x[["transfer_transaction_id"]]),
+                                       "", .x[["transfer_transaction_id"]]),
+      matched_transaction_id = ifelse(is.null(.x[["matched_transaction_id"]]),
+                                      "", .x[["matched_transaction_id"]]),
+      import_id = ifelse(is.null(.x[["import_id"]]), "", .x[["import_id"]]),
+      deleted = ifelse(is.null(.x[["deleted"]]), "", .x[["deleted"]])
+    )
+
+    return(df)
+  }))
+
+  return(ad)
+}

@@ -4,7 +4,7 @@
 \alias{print.budget_data}
 \title{Print Budget data}
 \usage{
-\method{print}{budget_data}(x)
+\method{print}{budget_data}(bd)
 }
 \arguments{
 \item{x}{}

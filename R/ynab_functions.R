@@ -30,8 +30,10 @@
 #' @export
 #' @examples
 #' ## set_ynab_token("test**************************************************")
-ynab_set_token <- function(token, api_version = "v1"){
-  # Add getting the token from an enviroment variable -----
+ynab_set_token <- function(token = NULL, api_version = "v1"){
+  # Get the token from an enviroment variable
+  if(is.null(token))
+    token <- Sys.getenv("YNAB_TOKEN")
 
   # Check the class of the token argument
   if(class(token) != "character")
@@ -57,9 +59,6 @@ ynab_set_token <- function(token, api_version = "v1"){
 #'
 #' @examples
 execute_get_req <- function(endpoint){
-
-# TODO: Read from an environment variable if available --------------------
-
 
   ret_val <- httr::GET(url = paste(getOption("base_url"), endpoint, sep = ""),
                   httr::add_headers(Authorization = paste("Bearer", getOption("ynab_token"))))
@@ -217,13 +216,26 @@ summary.budget_data <- function(bd){
 }
 
 
+#' ynab_get_account_data
+#'
+#' This takes a budget data object as an argument and returns all of the the
+#' transactional account data for all accounts in that budget. Depending on the
+#' amount of data, this can take some time.
+#'
+#' @param bd
+#'
+#' @return
+#' @export
+#'
+#' @examples
 ynab_get_account_data <- function(bd){
+  # Fetch the raw account data from the budget object
 suppressWarnings(
   ad <- purrr::map_df(x[["data"]][["budget"]][["transactions"]], ~{
     df <- data.frame(
       id = .x[["id"]],
       date = .x[["date"]],
-      amount = .x[["amount"]],
+      amount = .x[["amount"]]/1000,
       memo = ifelse(is.null(.x[["memo"]]), "", .x[["memo"]]),
       cleared = .x[["cleared"]],
       approved = .x[["approved"]],
@@ -240,6 +252,9 @@ suppressWarnings(
       import_id = ifelse(is.null(.x[["import_id"]]), "", .x[["import_id"]]),
       deleted = ifelse(is.null(.x[["deleted"]]), "", .x[["deleted"]])
     )
+
+# TODO: Fetch and Merge Account Meta data ---------------------------------------
+
 
     return(df)
   }))

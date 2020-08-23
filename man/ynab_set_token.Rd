@@ -4,7 +4,7 @@
 \alias{ynab_set_token}
 \title{Set your YNAB API options}
 \usage{
-ynab_set_token(token, api_version = "v1")
+ynab_set_token(token = NULL, api_version = "v1")
 }
 \arguments{
 \item{token}{}

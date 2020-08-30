@@ -58,10 +58,11 @@ ynab_set_token <- function(token = NULL, api_version = "v1"){
 #' @export
 #'
 #' @examples
-execute_get_req <- function(endpoint){
+execute_get_req <- function(endpoint, timeout = 20){
 
   ret_val <- httr::GET(url = paste(getOption("base_url"), endpoint, sep = ""),
-                  httr::add_headers(Authorization = paste("Bearer", getOption("ynab_token"))))
+                  httr::add_headers(Authorization = paste("Bearer", getOption("ynab_token"))),
+                  httr::timeout(timeout))
   return(ret_val)
 }
 
@@ -118,6 +119,9 @@ ynab_get_budget <- function(budget){
     bd <- httr::content(execute_get_req(paste0("budgets/", budget)))
   }
 
+# TODO: Deal with deleted data --------------------------------------------
+
+
   # Add S3 class
   class(bd) <- c("budget_data", "list")
 
@@ -150,10 +154,52 @@ ynab_get_budget <- function(budget){
       return(.x)
     })
 
+  # Convert category budgeted, activity, and balance to actual units
+  bd[["data"]][["budget"]][["categories"]] <-
+    purrr::map(bd[["data"]][["budget"]][["categories"]], ~{
+      .x[["budgeted"]] <- .x[["budgeted"]]/1000
+      .x[["activity"]] <- .x[["activity"]]/1000
+      .x[["balance"]] <- .x[["balance"]]/1000
+      return(.x)
+    })
 
-# TODO: Convert milliunits to actual units --------------------------------
+  # Convert months income, budgeted, activity, and to_be_budgeted to actual units
+  bd[["data"]][["budget"]][["months"]] <-
+    purrr::map(bd[["data"]][["budget"]][["months"]], ~{
+      .x[["income"]] <- .x[["income"]]/1000
+      .x[["budgeted"]] <- .x[["budgeted"]]/1000
+      .x[["activity"]] <- .x[["activity"]]/1000
+      .x[["to_be_budgeted"]] <- .x[["to_be_budgeted"]]/1000
+      return(.x)
+    })
 
+  # Convert transactions amount to actual units
+  bd[["data"]][["budget"]][["transactions"]] <-
+    purrr::map(bd[["data"]][["budget"]][["transactions"]], ~{
+      .x[["amount"]] <- .x[["amount"]]/1000
+      return(.x)
+    })
 
+  # Convert subtransactions amount to actual units
+  bd[["data"]][["budget"]][["subtransactions"]] <-
+    purrr::map(bd[["data"]][["budget"]][["subtransactions"]], ~{
+      .x[["amount"]] <- .x[["amount"]]/1000
+      return(.x)
+    })
+
+  # Convert scheduled transactions amount to actual units
+  bd[["data"]][["budget"]][["scheduled_transactions"]] <-
+    purrr::map(bd[["data"]][["budget"]][["scheduled_transactions"]], ~{
+      .x[["amount"]] <- .x[["amount"]]/1000
+      return(.x)
+    })
+
+  # Convert scheduled subtransactions amount to actual units
+  bd[["data"]][["budget"]][["scheduled_subtransactions"]] <-
+    purrr::map(bd[["data"]][["budget"]][["scheduled_subtransactions"]], ~{
+      .x[["amount"]] <- .x[["amount"]]/1000
+      return(.x)
+    })
 
   # Return the data
   return(bd)
@@ -235,7 +281,7 @@ suppressWarnings(
     df <- data.frame(
       id = .x[["id"]],
       date = .x[["date"]],
-      amount = .x[["amount"]]/1000,
+      amount = .x[["amount"]],
       memo = ifelse(is.null(.x[["memo"]]), "", .x[["memo"]]),
       cleared = .x[["cleared"]],
       approved = .x[["approved"]],
@@ -254,6 +300,9 @@ suppressWarnings(
     )
 
 # TODO: Fetch and Merge Account Meta data ---------------------------------------
+
+# TODO: Deal with sub transactions ----------------------------------------
+
 
 
     return(df)

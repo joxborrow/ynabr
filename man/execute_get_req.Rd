@@ -4,7 +4,7 @@
 \alias{execute_get_req}
 \title{Execute a YNAB GET request}
 \usage{
-execute_get_req(endpoint)
+execute_get_req(endpoint, timeout = 20)
 }
 \arguments{
 \item{entry_point}{}

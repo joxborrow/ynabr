@@ -4,7 +4,7 @@
 \alias{ynab_get_budget}
 \title{Get budget data}
 \usage{
-ynab_get_budget(budget)
+ynab_get_budget(budget, remove_deleted = TRUE)
 }
 \arguments{
 \item{budget}{}

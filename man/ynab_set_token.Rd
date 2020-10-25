@@ -22,6 +22,3 @@ token. It also sets the base_url option, including the YNAB api version.
 The token is obtained through a registration process on the YNAB website. The
 token is a 64 character long alphanumeric string.
 }
-\examples{
-## set_ynab_token("test**************************************************")
-}

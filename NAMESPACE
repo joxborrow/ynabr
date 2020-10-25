@@ -2,8 +2,9 @@
 
 S3method(print,budget_data)
 S3method(summary,budget_data)
+export("##")
+export("set_ynab_token(\"test**************************************************\")")
 export(execute_get_req)
 export(ynab_get_account_data)
 export(ynab_get_budget)
 export(ynab_list_budgets)
-export(ynab_set_token)

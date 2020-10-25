@@ -28,7 +28,6 @@
 #'
 #' @return No return value
 #' @export
-#' @examples
 #' ## set_ynab_token("test**************************************************")
 ynab_set_token <- function(token = NULL, api_version = "v1"){
   # Get the token from an enviroment variable
@@ -57,7 +56,6 @@ ynab_set_token <- function(token = NULL, api_version = "v1"){
 #' @return
 #' @export
 #'
-#' @examples
 execute_get_req <- function(endpoint, timeout = 20){
 
   ret_val <- httr::GET(url = paste(getOption("base_url"), endpoint, sep = ""),
@@ -71,7 +69,6 @@ execute_get_req <- function(endpoint, timeout = 20){
 #' @return
 #' @export
 #'
-#' @examples
 ynab_list_budgets <- function(){
   budget_list <- httr::content(execute_get_req("budgets"))
   budget_list <- budget_list[["data"]][["budgets"]]
@@ -100,7 +97,6 @@ ynab_list_budgets <- function(){
 #' @return
 #' @export
 #'
-#' @examples
 ynab_get_budget <- function(budget, remove_deleted = TRUE){
   budget_list <- ynab_list_budgets()
 
@@ -249,7 +245,6 @@ ynab_get_budget <- function(budget, remove_deleted = TRUE){
 #' @return
 #' @export
 #'
-#' @examples
 print.budget_data <- function(bd){
   # Print budget information
   cat("Budget Information\n=============================================")
@@ -293,7 +288,6 @@ print.budget_data <- function(bd){
 #' @return
 #' @export
 #'
-#' @examples
 summary.budget_data <- function(bd){
   print(bd)
 }
@@ -310,7 +304,6 @@ summary.budget_data <- function(bd){
 #' @return
 #' @export
 #'
-#' @examples
 ynab_get_account_data <- function(bd){
   # Fetch the raw account data from the budget object
 suppressWarnings(

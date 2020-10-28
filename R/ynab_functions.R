@@ -27,8 +27,6 @@
 #' @param token
 #'
 #' @return No return value
-#' @export
-#' ## set_ynab_token("test**************************************************")
 ynab_set_token <- function(token = NULL, api_version = "v1"){
   # Get the token from an enviroment variable
   if(is.null(token))

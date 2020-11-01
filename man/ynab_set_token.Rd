@@ -4,10 +4,12 @@
 \alias{ynab_set_token}
 \title{Set your YNAB API options}
 \usage{
-ynab_set_token(token = NULL, api_version = "v1")
+ynab_set_token(token = NULL)
 }
 \arguments{
-\item{token}{}
+\item{token}{This can be the 64 alphanumeric personal access token from the
+YNAB registration process. If left blank, the ynab_token option will be set
+from the environment variable YNAB_TOKEN.}
 }
 \value{
 No return value
@@ -16,7 +18,8 @@ No return value
 This function sets a global option ynab_token for use in
 many other function calls.  It should be the first function
 called as other functions will not work without a proper
-token. It also sets the base_url option, including the YNAB api version.
+token. It also sets the base_url option, including the YNAB api version
+(currently v1).
 }
 \details{
 The token is obtained through a registration process on the YNAB website. The

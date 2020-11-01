@@ -7,11 +7,12 @@
 \method{summary}{budget_data}(bd)
 }
 \arguments{
-\item{bd}{}
+\item{bd}{a budget_data object}
 }
 \value{
 
 }
 \description{
-Budget Data Summary
+Prints a summary of the budget_data object including key budget, account,
+payee, category, and transaction summary information.
 }

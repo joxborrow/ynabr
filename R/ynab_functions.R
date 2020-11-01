@@ -1,33 +1,21 @@
-# Hello, world!
-#
-# This is an example function named 'hello'
-# which prints 'Hello, world!'.
-#
-# You can learn more about package authoring with RStudio at:
-#
-#   http://r-pkgs.had.co.nz/
-#
-# Some useful keyboard shortcuts for package authoring:
-#
-#   Build and Reload Package:  'Ctrl + Shift + B'
-#   Check Package:             'Ctrl + Shift + E'
-#   Test Package:              'Ctrl + Shift + T'
-#
-
 #' Set your YNAB API options
 #'
 #' This function sets a global option ynab_token for use in
 #' many other function calls.  It should be the first function
 #' called as other functions will not work without a proper
-#' token. It also sets the base_url option, including the YNAB api version.
+#' token. It also sets the base_url option, including the YNAB api version
+#' (currently v1).
 #'
 #' The token is obtained through a registration process on the YNAB website. The
 #' token is a 64 character long alphanumeric string.
 #'
-#' @param token
+#' @param token This can be the 64 alphanumeric personal access token from the
+#' YNAB registration process. If left blank, the ynab_token option will be set
+#' from the environment variable YNAB_TOKEN.
 #'
 #' @return No return value
-ynab_set_token <- function(token = NULL, api_version = "v1"){
+#' @export
+ynab_set_token <- function(token = NULL){
   # Get the token from an enviroment variable
   if(is.null(token))
     token <- Sys.getenv("YNAB_TOKEN")
@@ -44,27 +32,31 @@ ynab_set_token <- function(token = NULL, api_version = "v1"){
   options(ynab_token = token)
 
   # Set the base url
-  options(base_url = paste0("https://api.youneedabudget.com/", api_version, "/"))
+  options(base_url = "https://api.youneedabudget.com/v1/")
 }
 
 #' Execute a YNAB GET request
 #'
 #' @param entry_point
 #'
-#' @return
-#' @export
+#' @return what ever obect has been requested
 #'
 execute_get_req <- function(endpoint, timeout = 20){
 
   ret_val <- httr::GET(url = paste(getOption("base_url"), endpoint, sep = ""),
-                  httr::add_headers(Authorization = paste("Bearer", getOption("ynab_token"))),
+                  httr::add_headers(Authorization =
+                                      paste("Bearer", getOption("ynab_token"))),
                   httr::timeout(timeout))
   return(ret_val)
 }
 
 #' List the available budgets
 #'
-#' @return
+#' This function is to be used after setting the ynab_token object. It will fetch
+#' and display the available budgets associated with the personal access token
+#' used.
+#'
+#' @return a data frame of the names and id's of all available budgets for download.
 #' @export
 #'
 ynab_list_budgets <- function(){
@@ -90,12 +82,16 @@ ynab_list_budgets <- function(){
 
 #' Get budget data
 #'
-#' @param budget
+#' This command is used to fetch budget data using the YNAB api.
 #'
-#' @return
+#' @param budget the name or id of an available budget. It can be determined by
+#' using the ynab_list_budgets() command.
+#'
+#' @return a "budget_data" object representing a list of the various data returned
+#' by the YNAB API, with only some convenient adjustments.
 #' @export
 #'
-ynab_get_budget <- function(budget, remove_deleted = TRUE){
+ynab_get_budget <- function(budget, remove_deleted = TRUE, remove_closed = TRUE){
   budget_list <- ynab_list_budgets()
 
 
@@ -141,14 +137,36 @@ ynab_get_budget <- function(budget, remove_deleted = TRUE){
       purrr::discard(bd[["data"]][["budget"]][["subtransactions"]], ~{.x[["deleted"]]})
     # Remove deleted scheduled_transactions
     bd[["data"]][["budget"]][["scheduled_transactions"]] <-
-      purrr::discard(bd[["data"]][["budget"]][["scheduled_transactions"]], ~{.x[["deleted"]]})
+      purrr::discard(bd[["data"]][["budget"]][["scheduled_transactions"]],
+                     ~{.x[["deleted"]]})
     # Remove deleted scheduled_subtransactions
     bd[["data"]][["budget"]][["scheduled_subtransactions"]] <-
-      purrr::discard(bd[["data"]][["budget"]][["scheduled_subtransactions"]], ~{.x[["deleted"]]})
+      purrr::discard(bd[["data"]][["budget"]][["scheduled_subtransactions"]],
+                     ~{.x[["deleted"]]})
   }
 
 # TODO: Deal with closed data ---------------------------------------------
+if (remove_closed == TRUE){
+  # Get list of accounts to be deleted
+  del_acct_list <- purrr::map(bd[["data"]][["budget"]][["accounts"]],
+                              ~{ifelse(.x[["closed"]] == TRUE,
+                                       .x[["id"]],
+                                       "Open")})
+  del_acct_list <- as.character(purrr::discard(del_acct_list, ~{.x == "Open"}))
 
+  # Get a list of transactions to be deleted
+  del_trans_list <- purrr::map(bd[["data"]][["budget"]][["transactions"]],
+                               ~{ifelse(.x[["account_id"]] %in% del_acct_list,
+                                        .x[["id"]], "Open")})
+  del_trans_list <- as.character(purrr::discard(del_trans_list, ~{.x == "Open"}))
+
+  # Get a list of subtransactions to delete
+  del_subtrans_list <- purrr::map(bd[['data']][['budget']][['subtransactions']],
+                                  ~{ifelse(.x[["transaction_id"]] %in% del_trans_list,
+                                           .x[['id']], 'Open')})
+  del_subtrans_list <- as.character(purrr::discard(del_subtrans_list, ~(.x == "Open")))
+
+}
 
 # TODO: Deal with off budget data -----------------------------------------
 
@@ -238,7 +256,10 @@ ynab_get_budget <- function(budget, remove_deleted = TRUE){
 
 #' Print Budget data
 #'
-#' @param x
+#' Prints a summary of the budget_data object including key budget, account,
+#' payee, category, and transaction summary information.
+#'
+#' @param bd a budget_data object
 #'
 #' @return
 #' @export
@@ -256,15 +277,18 @@ print.budget_data <- function(bd){
   # Print account information
   cat("\n\nAccount Information\n=============================================")
   cat(paste0("\n# of Accounts: ", length(bd[["data"]][["budget"]][["accounts"]])))
-  active_accounts <- purrr::keep(bd[["data"]][["budget"]][["accounts"]], function(.x) {return (!.x[["closed"]])})
+  active_accounts <- purrr::keep(bd[["data"]][["budget"]][["accounts"]],
+                                 function(.x) {return (!.x[["closed"]])})
   cat(paste0("\n# of Active Accounts: ", length(active_accounts)))
-  on_budget_accounts <- purrr::keep(bd[["data"]][["budget"]][["accounts"]], function(.x) {return (.x[["on_budget"]] & !.x[["closed"]])})
+  on_budget_accounts <- purrr::keep(bd[["data"]][["budget"]][["accounts"]],
+                                    function(.x) {return (.x[["on_budget"]] & !.x[["closed"]])})
   cat(paste0("\n# of Active On Budget Accounts: ", length(on_budget_accounts)))
 
   # Print Payee information
   cat("\n\nPayee Summary\n=============================================")
   cat(paste0("\n# of Payees: ", length(bd[["data"]][["budget"]][["payees"]])))
-  active_payees <- purrr::keep(bd[["data"]][["budget"]][["payees"]], function(.x) {return (!.x[["deleted"]])})
+  active_payees <- purrr::keep(bd[["data"]][["budget"]][["payees"]],
+                               function(.x) {return (!.x[["deleted"]])})
   cat(paste0("\n# of Active Payees: ", length(active_payees)))
 
   # Print Category information
@@ -281,7 +305,10 @@ print.budget_data <- function(bd){
 
 #' Budget Data Summary
 #'
-#' @param bd
+#' Prints a summary of the budget_data object including key budget, account,
+#' payee, category, and transaction summary information.
+#'
+#' @param bd a budget_data object
 #'
 #' @return
 #' @export
@@ -297,7 +324,7 @@ summary.budget_data <- function(bd){
 #' transactional account data for all accounts in that budget. Depending on the
 #' amount of data, this can take some time.
 #'
-#' @param bd
+#' @param bd a budget_data object
 #'
 #' @return
 #' @export
@@ -305,7 +332,7 @@ summary.budget_data <- function(bd){
 ynab_get_account_data <- function(bd){
   # Fetch the raw account data from the budget object
 suppressWarnings(
-  ad <- purrr::map_df(x[["data"]][["budget"]][["transactions"]], ~{
+  ad <- purrr::map_df(bd[["data"]][["budget"]][["transactions"]], ~{
     df <- data.frame(
       id = .x[["id"]],
       date = .x[["date"]],

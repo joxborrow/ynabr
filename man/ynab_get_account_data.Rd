@@ -7,7 +7,7 @@
 ynab_get_account_data(bd)
 }
 \arguments{
-\item{bd}{}
+\item{bd}{a budget_data object}
 }
 \value{
 

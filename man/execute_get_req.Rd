@@ -10,7 +10,7 @@ execute_get_req(endpoint, timeout = 20)
 \item{entry_point}{}
 }
 \value{
-
+what ever obect has been requested
 }
 \description{
 Execute a YNAB GET request

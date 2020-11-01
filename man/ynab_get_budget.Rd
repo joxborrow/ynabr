@@ -7,11 +7,13 @@
 ynab_get_budget(budget, remove_deleted = TRUE)
 }
 \arguments{
-\item{budget}{}
+\item{budget}{the name or id of an available budget. It can be determined by
+using the ynab_list_budgets() command.}
 }
 \value{
-
+a "budget_data" object representing a list of the various data returned
+by the YNAB API, with only some convenient adjustments.
 }
 \description{
-Get budget data
+This command is used to fetch budget data using the YNAB api.
 }

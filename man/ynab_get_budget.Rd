@@ -4,7 +4,7 @@
 \alias{ynab_get_budget}
 \title{Get budget data}
 \usage{
-ynab_get_budget(budget, remove_deleted = TRUE)
+ynab_get_budget(budget, remove_deleted = TRUE, remove_closed = TRUE)
 }
 \arguments{
 \item{budget}{the name or id of an available budget. It can be determined by

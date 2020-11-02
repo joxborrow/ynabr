@@ -13,5 +13,5 @@ execute_get_req(endpoint, timeout = 20)
 what ever obect has been requested
 }
 \description{
-Execute a YNAB GET request
+This function executes a GET request against the YNAB api.
 }

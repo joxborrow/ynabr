@@ -37,6 +37,7 @@ ynab_set_token <- function(token = NULL){
 
 #' Execute a YNAB GET request
 #'
+#' This function executes a GET request against the YNAB api.
 #' @param entry_point
 #'
 #' @return what ever obect has been requested
@@ -49,7 +50,6 @@ execute_get_req <- function(endpoint, timeout = 20){
                   httr::timeout(timeout))
   return(ret_val)
 }
-
 #' List the available budgets
 #'
 #' This function is to be used after setting the ynab_token object. It will fetch

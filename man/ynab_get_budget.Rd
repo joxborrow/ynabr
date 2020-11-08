@@ -4,11 +4,25 @@
 \alias{ynab_get_budget}
 \title{Get budget data}
 \usage{
-ynab_get_budget(budget, remove_deleted = TRUE, remove_closed = TRUE)
+ynab_get_budget(
+  budget,
+  remove_deleted = TRUE,
+  remove_closed = TRUE,
+  remove_off_budget = TRUE
+)
 }
 \arguments{
 \item{budget}{the name or id of an available budget. It can be determined by
 using the ynab_list_budgets() command.}
+
+\item{remove_deleted}{boolean indicating if deleted data should be removed
+from the returned budget object.}
+
+\item{remove_closed}{boolean indicating if closed account data should be
+removed from the returned budget object.}
+
+\item{remove_off_budget}{boolean indicating if off budget data should be
+removed from the budget object.}
 }
 \value{
 a "budget_data" object representing a list of the various data returned

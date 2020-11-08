@@ -86,12 +86,19 @@ ynab_list_budgets <- function(){
 #'
 #' @param budget the name or id of an available budget. It can be determined by
 #' using the ynab_list_budgets() command.
+#' @param remove_deleted boolean indicating if deleted data should be removed
+#' from the returned budget object.
+#' @param remove_closed boolean indicating if closed account data should be
+#' removed from the returned budget object.
+#' @param remove_off_budget boolean indicating if off budget data should be
+#' removed from the budget object.
 #'
 #' @return a "budget_data" object representing a list of the various data returned
 #' by the YNAB API, with only some convenient adjustments.
 #' @export
 #'
-ynab_get_budget <- function(budget, remove_deleted = TRUE, remove_closed = TRUE){
+ynab_get_budget <- function(budget, remove_deleted = TRUE, remove_closed = TRUE,
+                            remove_off_budget = TRUE){
   budget_list <- ynab_list_budgets()
 
 
@@ -145,30 +152,81 @@ ynab_get_budget <- function(budget, remove_deleted = TRUE, remove_closed = TRUE)
                      ~{.x[["deleted"]]})
   }
 
-# TODO: Deal with closed data ---------------------------------------------
-if (remove_closed == TRUE){
-  # Get list of accounts to be deleted
-  del_acct_list <- purrr::map(bd[["data"]][["budget"]][["accounts"]],
-                              ~{ifelse(.x[["closed"]] == TRUE,
-                                       .x[["id"]],
-                                       "Open")})
-  del_acct_list <- as.character(purrr::discard(del_acct_list, ~{.x == "Open"}))
+# Deal with closed data
+  if (remove_closed == TRUE){
+    # Get list of accounts to be deleted
+    del_acct_list <- purrr::map(bd[["data"]][["budget"]][["accounts"]],
+                                ~{ifelse(.x[["closed"]] == TRUE,
+                                         .x[["id"]],
+                                         "Open")})
+    del_acct_list <- as.character(purrr::discard(del_acct_list, ~{.x == "Open"}))
 
-  # Get a list of transactions to be deleted
-  del_trans_list <- purrr::map(bd[["data"]][["budget"]][["transactions"]],
-                               ~{ifelse(.x[["account_id"]] %in% del_acct_list,
-                                        .x[["id"]], "Open")})
-  del_trans_list <- as.character(purrr::discard(del_trans_list, ~{.x == "Open"}))
+    # Get a list of transactions to be deleted
+    del_trans_list <- purrr::map(bd[["data"]][["budget"]][["transactions"]],
+                                 ~{ifelse(.x[["account_id"]] %in% del_acct_list,
+                                          .x[["id"]], "Open")})
+    del_trans_list <- as.character(purrr::discard(del_trans_list, ~{.x == "Open"}))
 
-  # Get a list of subtransactions to delete
-  del_subtrans_list <- purrr::map(bd[['data']][['budget']][['subtransactions']],
-                                  ~{ifelse(.x[["transaction_id"]] %in% del_trans_list,
-                                           .x[['id']], 'Open')})
-  del_subtrans_list <- as.character(purrr::discard(del_subtrans_list, ~(.x == "Open")))
+    # Get a list of subtransactions to delete
+    del_subtrans_list <- purrr::map(bd[['data']][['budget']][['subtransactions']],
+                                    ~{ifelse(.x[["transaction_id"]] %in% del_trans_list,
+                                             .x[['id']], 'Open')})
+    del_subtrans_list <- as.character(purrr::discard(del_subtrans_list, ~(.x == "Open")))
 
-}
+    # Eliminate closed accounts
+    bd[["data"]][["budget"]][["accounts"]] <-
+      purrr::discard(bd[["data"]][["budget"]][["accounts"]],
+                     ~{.x[["id"]] %in% del_acct_list})
+
+    # Eliminate closed account transactions
+    bd[["data"]][["budget"]][["transactions"]] <-
+      purrr::discard(bd[["data"]][["budget"]][["transactions"]],
+                     ~{.x[["id"]] %in% del_trans_list})
+
+    # Eliminate closed account subtransactions
+    bd[["data"]][["budget"]][["subtransactions"]] <-
+      purrr::discard(bd[["data"]][["budget"]][["subtransactions"]],
+                     ~{.x[["id"]] %in% del_subtrans_list})
+
+  }
 
 # TODO: Deal with off budget data -----------------------------------------
+  if (remove_off_budget == TRUE){
+    # Get list of accounts to be deleted
+    del_acct_list <- purrr::map(bd[["data"]][["budget"]][["accounts"]],
+                                ~{ifelse(.x[["on_budget"]] == FALSE,
+                                         .x[["id"]],
+                                         "On Budget")})
+    del_acct_list <- as.character(purrr::discard(del_acct_list, ~{.x == "On Budget"}))
+
+    # Get a list of transactions to be deleted
+    del_trans_list <- purrr::map(bd[["data"]][["budget"]][["transactions"]],
+                                 ~{ifelse(.x[["account_id"]] %in% del_acct_list,
+                                          .x[["id"]], "On Budget")})
+    del_trans_list <- as.character(purrr::discard(del_trans_list, ~{.x == "On Budget"}))
+
+    # Get a list of subtransactions to delete
+    del_subtrans_list <- purrr::map(bd[['data']][['budget']][['subtransactions']],
+                                    ~{ifelse(.x[["transaction_id"]] %in% del_trans_list,
+                                             .x[['id']], 'On Budget')})
+    del_subtrans_list <- as.character(purrr::discard(del_subtrans_list, ~(.x == "On Budget")))
+
+    # Eliminate closed accounts
+    bd[["data"]][["budget"]][["accounts"]] <-
+      purrr::discard(bd[["data"]][["budget"]][["accounts"]],
+                     ~{.x[["id"]] %in% del_acct_list})
+
+    # Eliminate closed account transactions
+    bd[["data"]][["budget"]][["transactions"]] <-
+      purrr::discard(bd[["data"]][["budget"]][["transactions"]],
+                     ~{.x[["id"]] %in% del_trans_list})
+
+    # Eliminate closed account subtransactions
+    bd[["data"]][["budget"]][["subtransactions"]] <-
+      purrr::discard(bd[["data"]][["budget"]][["subtransactions"]],
+                     ~{.x[["id"]] %in% del_subtrans_list})
+
+  }
 
 
   # Add S3 class

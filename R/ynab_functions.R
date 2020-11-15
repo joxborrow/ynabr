@@ -190,7 +190,7 @@ ynab_get_budget <- function(budget, remove_deleted = TRUE, remove_closed = TRUE,
 
   }
 
-# TODO: Deal with off budget data -----------------------------------------
+# Deal with off budget data -----------------------------------------
   if (remove_off_budget == TRUE){
     # Get list of accounts to be deleted
     del_acct_list <- purrr::map(bd[["data"]][["budget"]][["accounts"]],

@@ -388,11 +388,11 @@ summary.budget_data <- function(bd){
 #' @export
 #'
 ynab_get_account_data <- function(bd){
-  # Fetch the raw account data from the budget object
+# Fetch the raw account data from the budget object
 suppressWarnings(
   ad <- purrr::map_df(bd[["data"]][["budget"]][["transactions"]], ~{
     df <- data.frame(
-      id = .x[["id"]],
+      transaction_id = .x[["id"]],
       date = .x[["date"]],
       amount = .x[["amount"]],
       memo = ifelse(is.null(.x[["memo"]]), "", .x[["memo"]]),
@@ -409,17 +409,48 @@ suppressWarnings(
       matched_transaction_id = ifelse(is.null(.x[["matched_transaction_id"]]),
                                       "", .x[["matched_transaction_id"]]),
       import_id = ifelse(is.null(.x[["import_id"]]), "", .x[["import_id"]]),
-      deleted = ifelse(is.null(.x[["deleted"]]), "", .x[["deleted"]])
+      deleted = ifelse(is.null(.x[["deleted"]]), "", .x[["deleted"]]),
+      stringsAsFactors = FALSE
+    )}))
+
+  # TODO: Fetch and Merge Account Meta data ---------------------------------------
+  amd <- purrr::map_df(bd[["data"]][["budget"]][["accounts"]], ~{
+    df <- data.frame(
+      account_id = .x[['id']],
+      account_name = .x[['name']],
+      account_type = .x[['type']],
+      on_budget = .x[['on_budget']],
+      closed = .x[['closed']],
+      balance = .x[['balance']],
+      cleared_balance = .x[['cleared_balance']],
+      uncleared_balance = .x[['uncleared_balance']],
+      transfer_payee_id = .x[['transfer_payee_id']],
+      account_deleted = .x[['deleted']],
+      stringsAsFactors = FALSE
     )
-
-# TODO: Fetch and Merge Account Meta data ---------------------------------------
-
-# TODO: Deal with sub transactions ----------------------------------------
+  })
 
 
+  # TODO: Fetch Payee metadata ----------------------------------------------
+  pmd <- purrr::map_df(bd[['data']][['budget']][['payees']], ~{
+    df <- data.frame(
+      payee_id = .x[['id']],
+      payee_name = .x[['name']],
+      payee_transfer_account_id = ifelse(is.null(.x[['transfer_account_id']]),
+                                         NA,
+                                         .x[['transfer_account_id']]),
+      stringsAsFactors = FALSE
+    )
+  })
 
-    return(df)
-  }))
+  # TODO: Fetch Category metadata -------------------------------------------
 
+  # TODO: Deal with sub transactions ----------------------------------------
+
+  # TODO: Merge all metadata ------------------------------------------------
+  ad <- merge(ad, amd, by.x = 'account_id', by.y = "account_id", all.x = TRUE)
+  ad <- merge(ad, pmd, by.x = 'payee_id', by.y = "payee_id", all.x = TRUE)
+
+  # Return account data
   return(ad)
 }

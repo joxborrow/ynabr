@@ -25,7 +25,7 @@ removed from the returned budget object.}
 removed from the budget object.}
 }
 \value{
-a "budget_data" object representing a list of the various data returned
+a 'budget_data' object representing a list of the various data returned
 by the YNAB API, with only some convenient adjustments.
 }
 \description{

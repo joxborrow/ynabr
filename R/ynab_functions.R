@@ -116,7 +116,7 @@ ynab_get_budget <- function(budget, remove_deleted = TRUE, remove_closed = TRUE,
     bd <- httr::content(execute_get_req(paste0('budgets/', budget)))
   }
 
-  # Deal with deleted data
+  # Deal with deleted data ----------------------
   if(remove_deleted == TRUE){
     # Remove deleted accounts
     bd[['data']][['budget']][['accounts']] <-
@@ -152,7 +152,7 @@ ynab_get_budget <- function(budget, remove_deleted = TRUE, remove_closed = TRUE,
                      ~{.x[['deleted']]})
   }
 
-# Deal with closed data
+# Deal with closed data -------------------
   if (remove_closed == TRUE){
     # Get list of accounts to be deleted
     del_acct_list <- purrr::map(bd[['data']][['budget']][['accounts']],
@@ -413,7 +413,7 @@ suppressWarnings(
       stringsAsFactors = FALSE
     )}))
 
-  # TODO: Fetch and Merge Account Meta data ---------------------------------------
+  # Fetch Account Meta data ---------------------------------------
   amd <- purrr::map_df(bd[['data']][['budget']][['accounts']], ~{
     df <- data.frame(
       account_id = .x[['id']],
@@ -471,13 +471,40 @@ suppressWarnings(
       stringsAsFactors = FALSE
     )
   })
-  # TODO: Deal with sub transactions ----------------------------------------
 
-  # TODO: Merge all metadata ------------------------------------------------
+  # Merge metadata ------------------------------------------------
   ad <- merge(ad, amd, by.x = 'account_id', by.y = 'account_id', all.x = TRUE)
   ad <- merge(ad, pmd, by.x = 'payee_id', by.y = 'payee_id', all.x = TRUE)
   ad <- merge(ad, cmd, by.x = 'category_id', by.y = 'category_id', all.x = TRUE)
 
+  # TODO: Clean up final data set without subtransactions -------------
+
+  # TODO: Deal with sub transactions ----------------------------------------
+  sta <- purrr::map_df(bd[['data']][['budget']][['subtransactions']], ~{
+    df <- data.frame(
+      sta_id = .x[['id']],
+      transaction_id = .x[['transaction_id']],
+      sta_amount = .x[['amount']],
+      sta_memo = ifelse(is.null(.x[['memo']]),
+                        NA,
+                        .x[['memo']]),
+      sta_payee_id = ifelse(is.null(.x[['payee_id']]),
+                            NA,
+                            .x[['payee_id']]),
+      sta_category_id = ifelse(is.null(.x[['category_id']]),
+                           NA,
+                           .x[['category_id']]),
+      sta_transfer_account_id = ifelse(is.null(.x[['transfer_account_id']]),
+                                       NA,
+                                       .x[['transfer_account_id']]),
+      sta_deleted = .x[['deleted']]
+    )
+
+  })
+
+  sta <- merge(sta, pmd, by.x = 'sta_payee_id', by.y = 'payee_id', all.x = TRUE)
+  sta <- merge(sta, cmd, by.x = 'sta_category_id', by.y = 'category_id', all.x = TRUE)
+
   # Return account data
-  return(ad)
+  return(sta)
 }

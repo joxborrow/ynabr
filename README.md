@@ -1,5 +1,6 @@
 YNABR - A ‘You Need a Budget’ API client for R
 ================
+![R](https://github.com/joxborrow/ynabr/workflows/R/badge.svg)
 
 This is the beginnings of an API client for the
 [YNAB](http://www.youneedabudget.com) online budget software. This is

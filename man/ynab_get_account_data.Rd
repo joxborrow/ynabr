@@ -4,10 +4,13 @@
 \alias{ynab_get_account_data}
 \title{ynab_get_account_data}
 \usage{
-ynab_get_account_data(bd)
+ynab_get_account_data(bd, exclude_subtransactions = TRUE)
 }
 \arguments{
 \item{bd}{a budget_data object}
+
+\item{exclude_subtransactions}{a logical indicating if subtransactions should
+be included in the final data set.}
 }
 \value{
 
@@ -16,4 +19,9 @@ ynab_get_account_data(bd)
 This takes a budget data object as an argument and returns all of the the
 transactional account data for all accounts in that budget. Depending on the
 amount of data, this can take some time.
+}
+\details{
+Remember that this download the account data as it exists in YNAB. I dowloads
+reconciled, cleared, and uncleared transactions. It will only match data in
+your actual account to the extent that YNAB matches your actual account.
 }

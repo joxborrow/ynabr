@@ -82,7 +82,7 @@ amount of data, this can take some time." />
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -116,7 +116,7 @@ transactional account data for all accounts in that budget. Depending on the
 amount of data, this can take some time.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>ynab_get_account_data</span><span class='op'>(</span><span class='va'>bd</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>ynab_get_account_data</span><span class='op'>(</span><span class='va'>bd</span>, exclude_subtransactions <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -125,6 +125,11 @@ amount of data, this can take some time.</p>
       <th>bd</th>
       <td><p>a budget_data object</p></td>
     </tr>
+    <tr>
+      <th>exclude_subtransactions</th>
+      <td><p>a logical indicating if subtransactions should
+be included in the final data set.</p></td>
+    </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
@@ -132,6 +137,11 @@ amount of data, this can take some time.</p>
     
 
 
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>Remember that this download the account data as it exists in YNAB. I dowloads
+reconciled, cleared, and uncleared transactions. It will only match data in
+your actual account to the extent that YNAB matches your actual account.</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

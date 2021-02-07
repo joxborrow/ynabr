@@ -38,7 +38,8 @@ ynab_set_token <- function(token = NULL){
 #' Execute a YNAB GET request
 #'
 #' This function executes a GET request against the YNAB api.
-#' @param entry_point
+#' @param endpoint the enpoint desired in the YNAB 2.0 api
+#' @param timeout the timeout in seconds
 #'
 #' @return what ever obect has been requested
 #'
@@ -382,12 +383,18 @@ summary.budget_data <- function(bd){
 #' transactional account data for all accounts in that budget. Depending on the
 #' amount of data, this can take some time.
 #'
+#' Remember that this download the account data as it exists in YNAB. I dowloads
+#' reconciled, cleared, and uncleared transactions. It will only match data in
+#' your actual account to the extent that YNAB matches your actual account.
+#'
 #' @param bd a budget_data object
+#' @param exclude_subtransactions a logical indicating if subtransactions should
+#' be included in the final data set.
 #'
 #' @return
 #' @export
 #'
-ynab_get_account_data <- function(bd){
+ynab_get_account_data <- function(bd, exclude_subtransactions = TRUE){
 # Fetch the raw account data from the budget object
 suppressWarnings(
   ad <- purrr::map_df(bd[['data']][['budget']][['transactions']], ~{
@@ -479,32 +486,42 @@ suppressWarnings(
 
   # TODO: Clean up final data set without subtransactions -------------
 
-  # TODO: Deal with sub transactions ----------------------------------------
-  sta <- purrr::map_df(bd[['data']][['budget']][['subtransactions']], ~{
-    df <- data.frame(
-      sta_id = .x[['id']],
-      transaction_id = .x[['transaction_id']],
-      sta_amount = .x[['amount']],
-      sta_memo = ifelse(is.null(.x[['memo']]),
-                        NA,
-                        .x[['memo']]),
-      sta_payee_id = ifelse(is.null(.x[['payee_id']]),
-                            NA,
-                            .x[['payee_id']]),
-      sta_category_id = ifelse(is.null(.x[['category_id']]),
-                           NA,
-                           .x[['category_id']]),
-      sta_transfer_account_id = ifelse(is.null(.x[['transfer_account_id']]),
-                                       NA,
-                                       .x[['transfer_account_id']]),
-      sta_deleted = .x[['deleted']]
-    )
+  # Deal with sub transactions ----------------------------------------
+  if (exclude_subtransactions == FALSE){
+    sta <- purrr::map_df(bd[['data']][['budget']][['subtransactions']], ~{
+      df <- data.frame(
+        sta_id = .x[['id']],
+        transaction_id = .x[['transaction_id']],
+        sta_amount = .x[['amount']],
+        sta_memo = ifelse(is.null(.x[['memo']]),
+                          NA,
+                          .x[['memo']]),
+        sta_payee_id = ifelse(is.null(.x[['payee_id']]),
+                              NA,
+                              .x[['payee_id']]),
+        sta_category_id = ifelse(is.null(.x[['category_id']]),
+                             NA,
+                             .x[['category_id']]),
+        sta_transfer_account_id = ifelse(is.null(.x[['transfer_account_id']]),
+                                         NA,
+                                         .x[['transfer_account_id']]),
+        sta_deleted = .x[['deleted']]
+      )
 
-  })
+    })
 
-  sta <- merge(sta, pmd, by.x = 'sta_payee_id', by.y = 'payee_id', all.x = TRUE)
-  sta <- merge(sta, cmd, by.x = 'sta_category_id', by.y = 'category_id', all.x = TRUE)
+    # Add payee and category details subtransaction detail
+    sta <- merge(sta, pmd, by.x = 'sta_payee_id', by.y = 'payee_id', all.x = TRUE)
+    sta <- merge(sta, cmd, by.x = 'sta_category_id', by.y = 'category_id', all.x = TRUE)
+
+    # Add subtransaction detail to account data
+    ad <- merge(ad, sta, by.x = 'transaction_id', by.y = 'transaction_id', all.x = TRUE)
+
+    # TODO: Clean up data set with final transactions
+    ad$final_amount <- ifelse(is.na(ad$sta_amount), ad$amount, ad$sta_amount)
+
+  }
 
   # Return account data
-  return(sta)
+  return(ad)
 }

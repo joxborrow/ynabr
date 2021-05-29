@@ -7,9 +7,9 @@
 execute_get_req(endpoint, timeout = 20)
 }
 \arguments{
-\item{endpoint}{the url endpoint}
+\item{endpoint}{the enpoint desired in the YNAB 2.0 api}
 
-\item{timeout}{set the timeout}
+\item{timeout}{the timeout in seconds}
 }
 \value{
 what ever obect has been requested

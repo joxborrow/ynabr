@@ -17,15 +17,11 @@ transactional data. Follow the steps below to get set up:
 1.  Install the devtools package it you do not already have it
     installed.
 
-<!-- end list -->
-
 ``` r
 install.packages("devtools")
 ```
 
-2.  Install the ynabr package using devtools
-
-<!-- end list -->
+1.  Install the ynabr package using devtools
 
 ``` r
 devtools::install_github("joxborrow/ynabr")
@@ -43,46 +39,36 @@ devtools::install_github("joxborrow/ynabr")
 
 2.  Set the personal access token for usage.
 
-<!-- end list -->
-
-  - Preferred Method: The preferred method of setting the personal
+-   Preferred Method: The preferred method of setting the personal
     access token is to set the environment variable YNAB\_TOKEN and then
     executing the `ynab_set_token()` function.
-
-<!-- end list -->
 
 ``` r
 Sys.setenv(YNAB_TOKEN = "<ynab token>")
 ynab_set_token()
 ```
 
-  - Not recommended: The personal token may also be passed directly to
+-   Not recommended: The personal token may also be passed directly to
     the `ynab_set_token()` function as shown below. Note that having a
     token directly in your code is a bad security practice.
-
-<!-- end list -->
 
 ``` r
 ynab_set_token("<ynab token>")
 ```
 
-3.  List the available budgets available budgets using the
+1.  List the available budgets available budgets using the
     `ynab_list_budgets()` function. This returns and prints a data frame
     of the available budgets that can be downloaded.
-
-<!-- end list -->
 
 ``` r
 ynab_list_budgets()
 ```
 
-4.  Using either the name or budget id printed from the
+1.  Using either the name or budget id printed from the
     `ynab_list_budgets` you can download all of the budgets associated
     data. This returns a object of class `"budget_data"` that is used as
     the input for other functions in the package. It is an extensive
     list containing all budget and account data downloaded from YNAB.
-
-<!-- end list -->
 
 ``` r
 bd <- ynab_get_budget("<budget name or id>")
@@ -97,3 +83,8 @@ then extract account information for all account using the
 ``` r
 ac <- ynab_get_account_data(bd)
 ```
+
+Note that this downloads account data in your YNAB account. This
+includes reconciled, cleared, and uncleared transactions. This will not
+necessarily match data against your true bank account as uncleared
+transactions, and differing dates may be different.

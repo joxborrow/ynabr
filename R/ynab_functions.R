@@ -38,8 +38,8 @@ ynab_set_token <- function(token = NULL){
 #' Execute a YNAB GET request
 #'
 #' This function executes a GET request against the YNAB api.
-#' @param endpoint the url endpoint
-#' @param timeout set the timeout
+#' @param endpoint the enpoint desired in the YNAB 2.0 api
+#' @param timeout the timeout in seconds
 #'
 #' @return what ever obect has been requested
 #'
@@ -384,12 +384,18 @@ summary.budget_data <- function(bd){
 #' transactional account data for all accounts in that budget. Depending on the
 #' amount of data, this can take some time.
 #'
+#' Remember that this download the account data as it exists in YNAB. I dowloads
+#' reconciled, cleared, and uncleared transactions. It will only match data in
+#' your actual account to the extent that YNAB matches your actual account.
+#'
 #' @param bd a budget_data object
+#' @param exclude_subtransactions a logical indicating if subtransactions should
+#' be included in the final data set.
 #'
 #' @return
 #' @export
 #'
-ynab_get_account_data <- function(bd){
+ynab_get_account_data <- function(bd, exclude_subtransactions = TRUE){
 # Fetch the raw account data from the budget object
 suppressWarnings(
   ad <- purrr::map_df(bd[['data']][['budget']][['transactions']], ~{
@@ -502,10 +508,15 @@ suppressWarnings(
       deleted = .x[['deleted']]
     )
 
-  })
+    })
 
-  ad <- merge(ad, sta, by.x = "transaction_id", by.y = "transaction_id", all.x = TRUE)
-  
+    # Add payee and category details subtransaction detail
+    sta <- merge(sta, pmd, by.x = 'sta_payee_id', by.y = 'payee_id', all.x = TRUE)
+    sta <- merge(sta, cmd, by.x = 'sta_category_id', by.y = 'category_id', all.x = TRUE)
+
+    # Add subtransaction detail to account data
+    ad <- merge(ad, sta, by.x = 'transaction_id', by.y = 'transaction_id', all.x = TRUE)
+
   # TODO: Clean up dataset with subtransactions
 
   # Merge in Payee and Category Details

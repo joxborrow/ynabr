@@ -2,7 +2,7 @@
 % Please edit documentation in R/ynab_functions.R
 \name{ynab_get_account_data}
 \alias{ynab_get_account_data}
-\title{ynab_get_account_data}
+\title{Get all account data from a budget data object}
 \usage{
 ynab_get_account_data(bd)
 }

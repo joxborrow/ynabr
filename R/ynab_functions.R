@@ -38,7 +38,8 @@ ynab_set_token <- function(token = NULL){
 #' Execute a YNAB GET request
 #'
 #' This function executes a GET request against the YNAB api.
-#' @param entry_point
+#' @param endpoint the url endpoint
+#' @param timeout set the timeout
 #'
 #' @return what ever obect has been requested
 #'
@@ -210,7 +211,7 @@ ynab_get_budget <- function(budget, remove_deleted = TRUE, remove_closed = TRUE,
                                     ~{ifelse(.x[['transaction_id']] %in% del_trans_list,
                                              .x[['id']], 'On Budget')})
     del_subtrans_list <- as.character(purrr::discard(del_subtrans_list, ~(.x == 'On Budget')))
-
+    
     # Eliminate closed accounts
     bd[['data']][['budget']][['accounts']] <-
       purrr::discard(bd[['data']][['budget']][['accounts']],
@@ -324,7 +325,7 @@ ynab_get_budget <- function(budget, remove_deleted = TRUE, remove_closed = TRUE,
 #'
 print.budget_data <- function(bd){
   # Print budget information
-  cat('Budget Information\n=============================================')
+  cat('\nBudget Information\n=============================================')
   cat(paste0('\nName: ', bd[['data']][['budget']][['name']]))
   cat(paste0('\nID: ', bd[['data']][['budget']][['id']]))
   cat(paste0('\nLast Modified: ', bd[['data']][['budget']][['last_modified_on']]))
@@ -358,6 +359,7 @@ print.budget_data <- function(bd){
   cat('\n\nTransaction Summary\n=============================================')
   cat(paste0('\n# of Transactions: ', length(bd[['data']][['budget']][['transactions']])))
   cat(paste0('\n# of Scheduled Transactions: ', length(bd[['data']][['budget']][['scheduled_transactions']])))
+  cat('\n')
 
 }
 
@@ -376,7 +378,7 @@ summary.budget_data <- function(bd){
 }
 
 
-#' ynab_get_account_data
+#' Get all account data from a budget data object
 #'
 #' This takes a budget data object as an argument and returns all of the the
 #' transactional account data for all accounts in that budget. Depending on the
@@ -482,29 +484,34 @@ suppressWarnings(
   # TODO: Deal with sub transactions ----------------------------------------
   sta <- purrr::map_df(bd[['data']][['budget']][['subtransactions']], ~{
     df <- data.frame(
-      sta_id = .x[['id']],
+      id = .x[['id']],
       transaction_id = .x[['transaction_id']],
-      sta_amount = .x[['amount']],
-      sta_memo = ifelse(is.null(.x[['memo']]),
+      amount = .x[['amount']],
+      memo = ifelse(is.null(.x[['memo']]),
+                    NA,
+                    .x[['memo']]),
+      payee_id = ifelse(is.null(.x[['payee_id']]),
                         NA,
-                        .x[['memo']]),
-      sta_payee_id = ifelse(is.null(.x[['payee_id']]),
-                            NA,
-                            .x[['payee_id']]),
-      sta_category_id = ifelse(is.null(.x[['category_id']]),
-                           NA,
-                           .x[['category_id']]),
-      sta_transfer_account_id = ifelse(is.null(.x[['transfer_account_id']]),
-                                       NA,
-                                       .x[['transfer_account_id']]),
-      sta_deleted = .x[['deleted']]
+                        .x[['payee_id']]),
+      category_id = ifelse(is.null(.x[['category_id']]),
+                       NA,
+                       .x[['category_id']]),
+      transfer_account_id = ifelse(is.null(.x[['transfer_account_id']]),
+                                   NA,
+                                   .x[['transfer_account_id']]),
+      deleted = .x[['deleted']]
     )
 
   })
 
-  sta <- merge(sta, pmd, by.x = 'sta_payee_id', by.y = 'payee_id', all.x = TRUE)
-  sta <- merge(sta, cmd, by.x = 'sta_category_id', by.y = 'category_id', all.x = TRUE)
+  ad <- merge(ad, sta, by.x = "transaction_id", by.y = "transaction_id", all.x = TRUE)
+  
+  # TODO: Clean up dataset with subtransactions
+
+  # Merge in Payee and Category Details
+  sta <- merge(sta, pmd, by.x = 'payee_id', by.y = 'payee_id', all.x = TRUE)
+  sta <- merge(sta, cmd, by.x = 'category_id', by.y = 'category_id', all.x = TRUE)
 
   # Return account data
-  return(sta)
+  return(ad)
 }

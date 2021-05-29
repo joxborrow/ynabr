@@ -7,7 +7,9 @@
 execute_get_req(endpoint, timeout = 20)
 }
 \arguments{
-\item{entry_point}{}
+\item{endpoint}{the url endpoint}
+
+\item{timeout}{set the timeout}
 }
 \value{
 what ever obect has been requested

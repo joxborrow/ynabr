@@ -7,10 +7,11 @@
 ynab_list_budgets()
 }
 \value{
-a data frame of the names and id's of all available budgets for download.
+a data frame of the names and id's of all available 
+budgets for download.
 }
 \description{
-This function is to be used after setting the ynab_token object. It will fetch
-and display the available budgets associated with the personal access token
-used.
+This function is to be used after setting the ynab_token object. 
+It will fetch and display the available budgets associated with 
+the personal access token used.
 }

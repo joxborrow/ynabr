@@ -661,6 +661,27 @@ ynab_get_account_data <- function(bd, exclude_subtransactions = TRUE) {
     ad <- merge(ad, cmd, by.x = "category_id", by.y = "category_id", all.x = TRUE)
 
     # TODO: Final cleanup of subtransaction dataset
+    # Clean up amount
+    ad$amount <- ifelse(is.na(ad$amount.y),
+      ad$amount.x,
+      ad$amount.y
+    )
+    # Clean up memo fields
+    names(ad)[names(ad) == "memo.x"] <- "transaction_memo"
+    names(ad)[names(ad) == "memo.y"] <- "subtransaction_memo"
+
+    # Clean up payee_name
+    ad$payee_name <- ifelse(is.na(ad$payee_name.y),
+      ad$payee_name.x,
+      ad$payee_name.y
+    )
+
+    # Clean up category_name
+    ad$category_name <- ifelse(is.na(ad$category_name.y),
+      ad$category_name.x,
+      ad$category_name.y
+    )
+
   } else {
     # Merge in Payee and Category Details
     ad <- merge(ad, pmd, by.x = "payee_id", by.y = "payee_id", all.x = TRUE)

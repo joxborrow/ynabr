@@ -27,8 +27,8 @@ ynab_set_token <- function(token = NULL) {
   }
 
   # Check the length of the token argument
-  if (nchar(token) != 64) {
-    stop("The token argument must have a length of 64.")
+  if (nchar(token) == 0) {
+    stop("The token argument must be of non-zero length")
   }
 
   # Set the ynab_token option
@@ -525,7 +525,7 @@ ynab_get_account_data <- function(bd, exclude_subtransactions = TRUE) {
         approved = .x[["approved"]],
         flag_color = ifelse(is.null(.x[["flag_color"]]), NA, .x[["flag_color"]]),
         account_id = .x[["account_id"]],
-        payee_id = .x[["payee_id"]],
+        payee_id = ifelse(is.null(.x[["payee_id"]]), NA, .x[["payee_id"]]),
         category_id = ifelse(is.null(.x[["category_id"]]), NA, .x[["category_id"]]),
         transfer_account_id = ifelse(is.null(.x[["transfer_account_id"]]), NA,
           .x[["transfer_account_id"]]

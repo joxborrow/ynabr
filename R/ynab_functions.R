@@ -27,8 +27,8 @@ ynab_set_token <- function(token = NULL) {
   }
 
   # Check the length of the token argument
-  if (nchar(token) != 64) {
-    stop("The token argument must have a length of 64.")
+  if (nchar(token) == 0) {
+    stop("The token argument must be of non-zero length")
   }
 
   # Set the ynab_token option
